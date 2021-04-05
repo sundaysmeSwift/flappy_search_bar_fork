@@ -11,6 +11,7 @@ import 'search_bar_style.dart';
 import 'hot_history_style.dart';
 
 import 'hovering_header_list.dart';
+import 'index_bar.dart';
 
 Size _getTextSize(String text, TextStyle style) {
   final TextPainter textPainter = TextPainter(
@@ -258,22 +259,25 @@ class HoverListProperty {
 
   final bool hover;
   final bool needSafeArea;
+  final List<String> indexWordListOrBeforeList;
+  final Function(String) indexBarCallBack;
 
-  HoverListProperty({
-    this.itemCounts,
-    this.sectionHeaderBuild,
-    this.itemBuilder,
-    this.itemHeightForIndexPath,
-    this.headerHeightForSection,
-    this.separatorHeightForIndexPath,
-    this.separatorBuilder,
-    this.onTopChanged,
-    this.onEndChanged,
-    this.onOffsetChanged,
-    this.initialScrollOffset = 0,
-    this.hover = true,
-    this.needSafeArea = false,
-  });
+  HoverListProperty(
+      {this.itemCounts,
+      this.sectionHeaderBuild,
+      this.itemBuilder,
+      this.itemHeightForIndexPath,
+      this.headerHeightForSection,
+      this.separatorHeightForIndexPath,
+      this.separatorBuilder,
+      this.onTopChanged,
+      this.onEndChanged,
+      this.onOffsetChanged,
+      this.initialScrollOffset = 0,
+      this.hover = true,
+      this.needSafeArea = false,
+      this.indexWordListOrBeforeList,
+      this.indexBarCallBack});
 }
 
 class SearchBar<T, F> extends StatefulWidget {
@@ -459,6 +463,12 @@ class _SearchBarState<T, F> extends State<SearchBar<T, F>> //
   FocusNode focusNode = FocusNode();
   var _index = 0;
 
+  ScrollController _scrollController;
+  final Map _groupOffsetMap = {
+//    这里因为根据实际数据变化和固定全部字母前两个值都是一样的，所以没有做动态修改，如果不一样记得要修改
+    // INDEX_WORDS[0]: 0.0,
+    // INDEX_WORDS[1]: 0.0,
+  };
   GlobalKey<HoveringHeaderListState> _globalKey = GlobalKey();
 
   @override
@@ -501,6 +511,7 @@ class _SearchBarState<T, F> extends State<SearchBar<T, F>> //
         }
       }
     });
+    _scrollController = ScrollController();
   }
 
   @override
@@ -822,72 +833,94 @@ class _SearchBarState<T, F> extends State<SearchBar<T, F>> //
             child: IndexedStack(
           index: _index,
           children: [
-            HoveringHeaderList(
-              key: _globalKey,
+            Stack(
+              children: [
+                HoveringHeaderList(
+                  key: _globalKey,
 
-              ///分组信息，每组有几个item
-              itemCounts: widget.hoverListProperty.itemCounts ?? [0, 0],
+                  ///分组信息，每组有几个item
+                  itemCounts: widget.hoverListProperty.itemCounts ?? [0, 0],
 
-              ///header builder
-              sectionHeaderBuild: widget.hoverListProperty.sectionHeaderBuild ??
-                  (ctx, section) {
-                    return Text('header');
-                  },
+                  ///header builder
+                  sectionHeaderBuild:
+                      widget.hoverListProperty.sectionHeaderBuild ??
+                          (ctx, section) {
+                            return Text('header');
+                          },
 
-              ///header高度
-              headerHeightForSection:
-                  widget.hoverListProperty.headerHeightForSection ??
-                      (section) {
-                        return 40;
+                  ///header高度
+                  headerHeightForSection:
+                      widget.hoverListProperty.headerHeightForSection ??
+                          (section) {
+                            return 40;
+                          },
+
+                  ///item builder
+                  itemBuilder: widget.hoverListProperty.itemBuilder ??
+                      (ctx, indexPath, height) {
+                        return Text('indexpath item');
                       },
 
-              ///item builder
-              itemBuilder: widget.hoverListProperty.itemBuilder ??
-                  (ctx, indexPath, height) {
-                    return Text('indexpath item');
-                  },
+                  ///item高度
+                  itemHeightForIndexPath:
+                      widget.hoverListProperty.itemHeightForIndexPath ??
+                          (indexPath) {
+                            return 50;
+                          },
 
-              ///item高度
-              itemHeightForIndexPath:
-                  widget.hoverListProperty.itemHeightForIndexPath ??
-                      (indexPath) {
-                        return 50;
-                      },
-
-              ///分割线builder
-              separatorBuilder: widget.hoverListProperty.separatorBuilder ??
-                  (ctx, indexPath, height, isLast) {
+                  ///分割线builder
+                  separatorBuilder: widget.hoverListProperty.separatorBuilder ??
+                      (ctx, indexPath, height, isLast) {
 //        print("indexPath : $indexPath,$isLast");
-                    return Divider();
-                  },
-
-              ///分割线高度
-              separatorHeightForIndexPath:
-                  widget.hoverListProperty.separatorHeightForIndexPath ??
-                      (indexPath, isLast) {
-                        return 1;
+                        return Divider();
                       },
 
-              ///滚动到底部和离开底部的回调
-              onEndChanged: widget.hoverListProperty.onEndChanged ??
-                  (end) {
+                  ///分割线高度
+                  separatorHeightForIndexPath:
+                      widget.hoverListProperty.separatorHeightForIndexPath ??
+                          (indexPath, isLast) {
+                            return 1;
+                          },
+
+                  ///滚动到底部和离开底部的回调
+                  onEndChanged: widget.hoverListProperty.onEndChanged ??
+                      (end) {
 //          print("end : $end");
-                  },
+                      },
 
-              ///offset改变回调
-              onOffsetChanged: widget.hoverListProperty.onOffsetChanged ??
-                  (offset, maxOffset) {
+                  ///offset改变回调
+                  onOffsetChanged: widget.hoverListProperty.onOffsetChanged ??
+                      (offset, maxOffset) {
 //        print("111111:offset : $offset");
-                  },
+                      },
 
-              ///滚动到顶部和离开顶部的回调
-              onTopChanged: widget.hoverListProperty.onTopChanged ??
-                  (top) {
+                  ///滚动到顶部和离开顶部的回调
+                  onTopChanged: widget.hoverListProperty.onTopChanged ??
+                      (top) {
 //          print("top:$top");
-                  },
+                      },
 
-              ///是否需要悬停header
-              hover: widget.hoverListProperty.onTopChanged ?? true,
+                  ///是否需要悬停header
+                  hover: widget.hoverListProperty.onTopChanged ?? true,
+                ),
+                widget.hoverListProperty.indexWordListOrBeforeList != null
+                    ? IndexBar(
+                        indexWordListOrBeforeList:
+                            widget.hoverListProperty.indexWordListOrBeforeList,
+                        indexBarCallBack: (str) {
+                          if (widget.hoverListProperty.indexBarCallBack !=
+                              null) {
+                            widget.hoverListProperty.indexBarCallBack(str);
+                          }
+                          if (_groupOffsetMap[str] != null) {
+                            // _scrollController.animateTo(_groupOffsetMap[str],
+                            //     duration: Duration(milliseconds: 1),
+                            //     curve: Curves.easeIn);
+                          }
+                        },
+                      )
+                    : Container()
+              ],
             ),
             Container(
               padding: EdgeInsets.all(10),

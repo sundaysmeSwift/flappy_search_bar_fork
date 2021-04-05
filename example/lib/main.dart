@@ -138,9 +138,26 @@ class _HomeState extends State<Home> {
             cancellationWidgetWidth: cancellationWidgetWidth,
             emptyWidget: Text("empty"),
             hoverListProperty: HoverListProperty(itemCounts: [5]),
-            // indexedScaledTileBuilder: (int index) =>
-            //     // ScaledTile.count(1, 1), //index.isEven ? 2 : 1
-            //     ScaledTile.extent(1, 60),
+            scaledTileProperty: ScaledTitleProperty(
+              indexedScaledTileBuilder: (int index) => ScaledTile.extent(1, 60),
+              onItemFound: (post, int index) {
+                return Container(
+                  color: Colors.lightBlue,
+                  child: ListTile(
+                    title: Text((post.title)),
+                    // isThreeLine: true,
+                    subtitle: Text(post.body),
+                    onTap: () {
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => Detail()));
+                    },
+                  ),
+                );
+              },
+            ),
+            // indexedScaledTileBuilder: (int index) =>ScaledTile.extent(1, 60),
+            //indexedScaledTileBuilder: (int index) => ScaledTile.count(1, index.isEven ? 2 : 1),
+
             header: Row(
               children: <Widget>[
                 RaisedButton(
@@ -188,20 +205,6 @@ class _HomeState extends State<Home> {
             onItemLenovoFound: (item, int index) {
               return Text('item ---- ${index}');
             }, //2,
-            // onItemFound: (post, int index) {
-            //   return Container(
-            //     color: Colors.lightBlue,
-            //     child: ListTile(
-            //       title: Text((post.title)),
-            //       // isThreeLine: true,
-            //       subtitle: Text(post.body),
-            //       onTap: () {
-            //         Navigator.of(context).push(
-            //             MaterialPageRoute(builder: (context) => Detail()));
-            //       },
-            //     ),
-            //   );
-            // },
           ),
         )),
       ),
