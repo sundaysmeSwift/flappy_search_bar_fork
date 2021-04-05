@@ -1,3 +1,5 @@
+此案例参考flappy_search_bar_fork 和 FultterIntroduction 控件改写而成   （显示联系人列表样式尚未完成）部分尚未改写完毕，更新中
+
 flappy_search_bar_fork
 ==============================
 This is fork of flappy_search_bar
@@ -15,61 +17,124 @@ To use this plugin, add flappy_search_bar as a dependency in your pubspec.yaml f
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SearchBar<Post>(
-          searchBarPadding: EdgeInsets.symmetric(horizontal: 10),
-          headerPadding: EdgeInsets.symmetric(horizontal: 10),
-          listPadding: EdgeInsets.symmetric(horizontal: 10),
-          onSearch: _getALlPosts,
-          searchBarController: _searchBarController,
-          placeHolder: Text("placeholder"),
-          cancellationWidget: Text("Cancel"),
-          emptyWidget: Text("empty"),
-          indexedScaledTileBuilder: (int index) => ScaledTile.count(1, index.isEven ? 2 : 1),
-          header: Row(
-            children: <Widget>[
-              RaisedButton(
-                child: Text("sort"),
-                onPressed: () {
-                  _searchBarController.sortList((Post a, Post b) {
-                    return a.body.compareTo(b.body);
-                  });
-                },
-              ),
-              RaisedButton(
-                child: Text("Desort"),
-                onPressed: () {
-                  _searchBarController.removeSort();
-                },
-              ),
-              RaisedButton(
-                child: Text("Replay"),
-                onPressed: () {
-                  isReplay = !isReplay;
-                  _searchBarController.replayLastSearch();
-                },
-              ),
-            ],
+        child: SearchBar<Post, String>(
+            searchBarPadding: EdgeInsets.symmetric(horizontal: 10),
+            headerPadding: EdgeInsets.symmetric(horizontal: 10),
+            listPadding: EdgeInsets.symmetric(horizontal: 10),
+            getListData: _getData,
+            searchType: SearchType.search,
+            onChange: _getALlPosts,
+            searchBarController: _searchBarController,
+            textAligin: textAligin,
+            textPaddingLeft: 30,
+            // focusNode: focusNode,
+            focusCall: () {
+              setState(() {
+                print('focuscall');
+                textAligin = TextAlign.left;
+                cancellationWidgetWidth = 120;
+              });
+            },
+            hintText: '搜索',
+            hintStyle: TextStyle(
+              textBaseline: TextBaseline.alphabetic,
+              fontSize: 16,
+            ),
+            placeHolder: Text("placeholder"),
+            cancellationWidget: Text("Cancel"),
+            cancellationWidgetWidth: cancellationWidgetWidth,
+            emptyWidget: Text("empty"),
+            改写后到属性 (hoverListProperty,scaledTileProperty只选其一)
+            hoverListProperty: HoverListProperty(itemCounts: [5],xx,xx,),
+            
+            scaledTileProperty: ScaledTitleProperty(
+              indexedScaledTileBuilder: (int index) => ScaledTile.extent(1, 60),
+              onItemFound: (post, int index) {
+                return Container(
+                  color: Colors.lightBlue,
+                  child: ListTile(
+                    title: Text((post.title)),
+                    // isThreeLine: true,
+                    subtitle: Text(post.body),
+                    onTap: () {
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => Detail()));
+                    },
+                  ),
+                );
+              },
+            ),
+            //这两个属性属性被改写到一个属性里边
+            // indexedScaledTileBuilder: (int index) =>ScaledTile.extent(1, 60),
+            //indexedScaledTileBuilder: (int index) => ScaledTile.count(1, index.isEven ? 2 : 1),
+            
+            // onItemFound: (post, int index) {
+            //   return Container(
+            //     color: Colors.lightBlue,
+            //     child: ListTile(
+            //       title: Text((post.title)),
+            //       // isThreeLine: true,
+            //       subtitle: Text(post.body),
+            //       onTap: () {
+            //         Navigator.of(context).push(
+            //             MaterialPageRoute(builder: (context) => Detail()));
+            //       },
+            //     ),
+            //   );
+            // },
+            
+            
+            
+            
+            header: Row(
+              children: <Widget>[
+                RaisedButton(
+                  child: Text("Sort"),
+                  onPressed: () {
+                    _searchBarController.sortList((Post a, Post b) {
+                      return a.body.compareTo(b.body);
+                    });
+                  },
+                ),
+                RaisedButton(
+                  child: Text("Desort"),
+                  onPressed: () {
+                    _searchBarController.removeSort();
+                  },
+                ),
+                RaisedButton(
+                  child: Text("Replay"),
+                  onPressed: () {
+                    isReplay = !isReplay;
+                    _searchBarController.replayLastSearch();
+                  },
+                ),
+                RaisedButton(
+                    child: Text("Random"),
+                    onPressed: () {
+                      // cancellationWidgetWidth = 0; //random.nextInt(250) + 50.0;
+                      // textPaddingLeft = 250;
+                      // focusNode = FocusNode();
+                      setState(() {});
+                    })
+              ],
+            ),
+            onCancelled: (String value) {
+              print("Cancelled triggered");
+
+              setState(() {
+                textAligin = TextAlign.center;
+                cancellationWidgetWidth = 0; //random.nextInt(250) + 50.0;
+              });
+            },
+            mainAxisSpacing: 0,
+            crossAxisSpacing: 10,
+            crossAxisCount: 1,
+            onItemLenovoFound: (item, int index) {
+              return Text('item ---- ${index}');
+            }, //2,
+            
           ),
-          onCancelled: () {
-            print("Cancelled triggered");
-          },
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          crossAxisCount: 2,
-          onItemFound: (Post post, int index) {
-            return Container(
-              color: Colors.lightBlue,
-              child: ListTile(
-                title: Text(post.title),
-                isThreeLine: true,
-                subtitle: Text(post.body),
-                onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => Detail()));
-                },
-              ),
-            );
-          },
-        ),
       ),
     );
   }
